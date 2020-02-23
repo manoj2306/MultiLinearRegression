@@ -1,6 +1,6 @@
 ---
 title: "Build a multivariate linear regression model"
-author: "INSOFE Lab"
+author: "Manoj"
 date: "12th Jan 2020"
 output:
   html_document:
@@ -57,7 +57,7 @@ library(gtools)
 library(dplyr)
 library(modes)
 
-setwd("D:\\INSOFE-80\\DAY6\\20200112_Batch80_CSE7402c_MultipleLinearRegression_StudentCopy")
+#setwd("D:\\INSOFE-80\\DAY6\\20200112_Batch80_CSE7402c_MultipleLinearRegression_StudentCopy")
 housing_data = read.csv("housing_data.csv")
 
 ```
