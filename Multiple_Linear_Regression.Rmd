@@ -1,0 +1,453 @@
+---
+title: "Build a multivariate linear regression model"
+author: "INSOFE Lab"
+date: "12th Jan 2020"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+---
+
+* Key takeaways:
+
+*	1) Building multivariate linear predictive model using lm()
+
+* 2)	Interpreting the diagnostic plots to check for the linear regression assumptions
+
+* 3)	Identifying influential observations and handling them.
+
+* 4)	Checking for multicollinearity through VIF.
+
+* 5)	Check if R square is the only reliable measure in evaluating model performance
+
+* 6)	Check for multiple metrics like VIF, R square, p values, F statistic, Error metrics (RMSE/MAPE). What does each one of them mean and how to use them model building.
+
+**NOTE:** Before starting this assignment please remember to clear your environment, you can do that by running the following code chunk
+
+```{r}
+
+
+
+```
+
+# Agenda 
+
+* __Problem Statement - Predict the prices of houses in Boston suburb. Target attribute is MV__
+
+* Get the data
+
+* Explore the data
+
+* Data Pre-processing
+
+* Model the data
+
+* Evaluation
+
+
+# Reading & Understanding the Data
+
+* Make sure the dataset is located in your current working directory
+
+```{r}
+rm(list = ls(all = T))
+library(caret)
+library(gtools)
+library(dplyr)
+library(modes)
+
+setwd("D:\\INSOFE-80\\DAY6\\20200112_Batch80_CSE7402c_MultipleLinearRegression_StudentCopy")
+housing_data = read.csv("housing_data.csv")
+
+```
+
+* Use the str() function to get a feel for the dataset.
+
+```{r}
+str(housing_data)
+
+```
+
+* The dataset has 506 rows and 14 columns.
+
+* The column/variable names' explanation is given below:
+
+1) __CRIM :__ Per capita Crime rate by town
+
+2) __ZN :__ Proportion of residential land zoned for lots over 25,000 sq.ft.
+
+3) __INDUS :__ Proportion of non-retail business acres per town
+
+4) __CHAS :___ Charles River dummy variable (= 1 if tract bounds river; 0 otherwise)
+
+5) __NOX :__ nitric oxides concentration (parts per 10 million)
+
+6) __RM :__ average number of rooms per dwelling
+
+7) __AGE :__ proportion of owner-occupied units built prior to 1940
+
+8) __DIS :__ weighted distances to five Boston employment centres
+
+9) __RAD :__ index of accessibility to radial highways
+
+10) __TAX :__ full-value property-tax rate per $10,000
+
+11) __PTRATIO :__ pupil-teacher ratio by town
+
+12) __B :__ 1000(Bk - 0.63)^2 where Bk is the proportion of African-Americans by town
+
+13) __LSTAT :__ Percentage of the population in the lower economic status 
+
+14) __MV  :__ Median value of owner-occupied homes in multiples of $1000
+
+
+* Take a look at the data using the "head()" and "tail()" functions
+
+
+```{r}
+head(housing_data,-6)
+tail(housing_data)
+
+```
+
+# Exploratory Analysis
+
+## Summary Statistics
+
+* Understand the distribution of various variables in the datset using the "summary()" function
+
+```{r}
+summary(housing_data)
+colSums(is.na(housing_data))
+housing_data$CHAS = as.factor(housing_data$CHAS)
+housing_data$RAD = as.factor(housing_data$RAD)
+str(housing_data)
+```
+
+
+# Data Pre-processing
+
+* We will impute missing values and standardize the data __after__ splitting the data into train and test sets
+
+## Train/Test Split
+
+* 70/30 - Train/Test split
+
+```{r}
+set.seed(29)
+train_rows = sample(x = 1:nrow(housing_data),size = .7*nrow(housing_data))
+train_data = housing_data[train_rows,]
+test_data = housing_data[-train_rows,]
+
+```
+
+## Missing Values Imputation
+
+* Find out the number of missing values in the dataset
+
+* Impute the missing values using the "preProcess()" function in conjunction with the "medianImpute" method
+
+```{r}
+
+imputer_values = preProcess(x = train_data,method = "medianImpute")
+train_data = predict(object = imputer_values,newdata = train_data)
+test_data = predict(object = imputer_values,newdata = test_data)
+colSums(is.na(train_data))
+colSums(is.na(test_data))
+```
+
+## Categorical missing value imputation
+
+```{r}
+library(DMwR) # used for caregorical missing value imputation
+
+train_data = centralImputation(train_data)
+test_data = centralImputation(test_data)
+
+
+```
+
+## Scatter Plots
+
+* A few bi-variate relationships are plotted below, but you are encouraged to explore the dataset in more detail
+
+```{r fig.height= 8, fig.width = 9}
+library(ggplot2)
+par(mfrow = c(2,2))
+plot(housing_data$LSTAT,housing_data$MV,ylim = "LSTAT",xlim = "MV",main = "Price vs status")
+
+
+```
+
+
+## Correlation Plot
+
+* Let's have a look at the various correlations between the variables in the dataset
+
+```{r fig.height= 8, fig.width = 9}
+library(corrplot)
+corrplot(cor(housing_data[,numAttr],use = "complete.obs"),method = "number")
+
+## chi square test for catogorical value
+
+
+```
+
+## seprating numeric and catogrical  value
+```{r}
+
+numAttr = c("CRIM","ZN","INDUS","NOX","RM",'AGE','DIS','TAX','PT',"B",'LSTAT')
+cols = colnames(train_data[,!names(train_data) %in% c("MV")])
+numAttr1 = C()
+catAttr = C()
+for (i in colnames(train_data)) {
+  if(is.numeric(train_data[,i]==T)) {
+    
+    
+  }
+  }
+}
+
+
+```
+
+
+## Standardizing the Data
+
+* It saves the metrics such as mean and standard deviation used for calculating the standardized value by creating a model object
+
+* We can then use the model object in the __"predict()"__ function to standardize any other unseen dataset with the same distribuiton and variables
+
+```{r}
+
+# Do not standardize the target variable
+
+std_model =preProcess(train_data[,numAttr],method = c("center","scale"))
+train_data[,numAttr] = predict(object = std_model,newdata = train_data[,numAttr])
+test_data[,numAttr] = predict( object = std_model,newdata = test_data[,numAttr])
+
+```
+
+
+# Modelling the Data
+
+## Basic Model
+
+* The "." adds all the variables other than the response variable while building the model.
+
+```{r}
+
+
+```
+
+# Influential Observations 
+## Leverage
+
+
+```{r}
+
+
+
+```
+
+* Remove the points having higher leverage value than the threshold set
+
+```{r}
+
+
+```
+
+* Method: Convention - If there are n data points and p parameters, then threshold can be taken a 3*(p/n) (some take 2(p/n) as well)
+* lev_threshold <- 3*length(model_basic$coefficients)/length(lev)
+* train_data[lev>lev_threshold,]
+* length(train_data[lev>lev_threshold,])
+
+```{r}
+
+# Identify records with high Cook's distance
+
+
+```
+
+```{r}
+
+
+```
+
+## stepAIC model
+
+* "stepAIC()" is a function in the MASS package
+
+* stepAIC uses AIC (Akaike information criterion) to either drop variables ("backward" direction) or add variables ("forward" direction) from the model. It allows us to do feature selection.
+
+```{r}
+
+
+
+```
+
+## Modifying the Model with the VIF
+
+**Variance Inflation Factor :**
+
+$$VIF_{k} = \dfrac{1}{1 - R_{k}^2}$$
+
+$R_{k}^2$ is the R^2-value obtained by regressing the kth predictor on the remaining predictors. VIF gives us an idea of multi-collinearity
+
+* Every explanatory variable would have a VIF score
+
+* A VIF > 4 means that there are signs of multi-collinearity and anything greater than 10 means that an explanatory variable should be dropped
+
+* We use the "vif()" function from the car package. 
+
+```{r}
+
+
+
+```
+
+* After applying the stepAIC, the VIF values have slightly reduced, but the variables "RAD" and "TAX" have VIF values higher than 4
+
+* Let's take a look at the correlation between the "RAD" and "TAX" variables
+
+```{r}
+
+
+
+```
+
+* The correlation coefficient is extremely high between the "RAD" and "TAX" variables
+
+* let's now remove the "TAX" variable, as it is the lesser significant of the two
+
+* Build another model without the "TAX" variable, and take a look at the VIFs
+
+
+```{r}
+
+
+
+```
+
+# Evaluation and Selection of Model
+
+## Picking the Right Model
+
+* The third model built after verifying the vif scores has a similar adjusted R^2 score compared to the previous models with significantly lower no. of explanatory variables and inter-variable interactions.
+
+* The VIF values of the predictors in the third model are lower when compared to the the other two models
+
+* Due to the above two reasons we pick the third model
+
+# Communication
+
+## Prediction
+
+Predict the Housing prices of the unseen boston housing data, using the chosen model.
+
+```{r}
+
+
+```
+
+## Performance Metrics
+
+Once we choose the model we have to report performance metrics on the test data. We are going to report four error metrics for regression.
+
+### Error Metrics for Regression
+
+* Mean Absolute Error (MAE):
+
+$$MAE = \dfrac{1}{n}\times\sum_{i = 1}^{n}|y_{i} - \hat{y_{i}}|$$
+
+
+* Mean Squared Error (MSE):
+
+$$MSE = \dfrac{1}{n}\times\sum_{i = 1}^{n}(y_{i} - \hat{y_{i}})^2$$
+
+
+* Root Mean Squared Error (RMSE):
+
+$$RMSE = \sqrt{\dfrac{1}{n}\times\sum_{i = 1}^{n}(y_{i} - \hat{y_{i}})^2}$$
+
+
+* Mean Absolute Percentage Error (MAPE):
+
+$$MAPE = \dfrac{100}{n}\times\dfrac{\sum_{i = 1}^{n}\mid{y_{i} - \hat{y_{i}}}\mid}{y_{i}}$$
+
+
+### Report Performance Metrics
+
+* Report performance metrics obtained by using the chosen model on the test data
+
+## Test Data
+
+### Evaluating the Model
+
+```{r}
+library(DMwR)
+
+# Error verification on train data
+
+
+
+```
+
+```{r}
+
+# Error verification on test data
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
