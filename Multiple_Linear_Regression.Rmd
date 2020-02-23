@@ -23,14 +23,6 @@ output:
 
 * 6)	Check for multiple metrics like VIF, R square, p values, F statistic, Error metrics (RMSE/MAPE). What does each one of them mean and how to use them model building.
 
-**NOTE:** Before starting this assignment please remember to clear your environment, you can do that by running the following code chunk
-
-```{r}
-
-
-
-```
-
 # Agenda 
 
 * __Problem Statement - Predict the prices of houses in Boston suburb. Target attribute is MV__
